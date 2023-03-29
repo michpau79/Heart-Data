@@ -1,0 +1,118 @@
+---
+title: "Untitled"
+output: html_document
+date: '2022-11-06'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r cars}
+library(readxl)
+library(dplyr)
+```
+
+
+```{r pressure, echo=FALSE}
+heart <- read.csv("C:\\Users\\Paulitsch.ALLMED\\Desktop\\Interne Fortbildung\\heart.csv")
+head(heart)
+```
+
+```{r}
+dim(heart)
+```
+
+```{r}
+summary(heart)
+```
+
+```{r}
+str(heart)
+```
+
+```{r}
+heart_trans <- heart
+
+heart_trans$sex <- factor(heart_trans$sex, levels = c(0,1), labels = c("Mann", "Frau"))
+heart_trans$cp <- factor(heart_trans$cp, levels = c(0,1,2,3), labels = c("typical angina", "atypical angina", "non-anginal pain", "asymptomatic"))#, ordered = TRUE) 
+heart_trans$fbs <- factor(heart_trans$fbs, levels = c(0,1), labels = c("false", "true"), ordered = TRUE)
+heart_trans$restecg <- factor(heart_trans$restecg, levels = c(0,1,2), labels = c("normal", "wave abnormality", "probable or definite left ventricular hypertrophy"))#, ordered = TRUE)
+heart_trans$exng <- factor(heart_trans$exng, levels = c(0,1), labels = c("no", "yes"))
+heart_trans$output <- factor(heart_trans$output, levels = c(0,1), labels = c("less chance", "more chance"), ordered = TRUE)
+```
+
+```{r}
+str(heart_trans)
+```
+
+```{r}
+heart_trans %>%
+  count(cp, sort = TRUE)
+```
+
+```{r}
+heart_trans$cp <- relevel(heart_trans$cp, ref = "asymptomatic")
+```
+
+
+
+
+```{r}
+heart_trans %>%
+  count(restecg, sort = TRUE)
+```
+
+```{r}
+heart_trans$restecg <- relevel(heart_trans$restecg, ref = "normal")
+```
+
+
+```{r}
+modell1 <-glm(output ~ age + sex + cp + trtbps + chol + fbs + restecg + thalachh + exng + oldpeak + slp, family=binomial(link='logit'), data = heart_trans)
+summary(modell1)
+```
+```{r}
+library(car)
+vif(modell1)
+```
+
+```{r}
+library(performance)
+r2_nagelkerke(modell1)
+```
+
+```{r}
+exp(coef(modell1))
+```
+
+
+```{r}
+Modell <- c("Neuronales Netz", "Gradient Boosing", "Log. Regression")
+Accuracy <- c(0.84, 0.80, 0.78)
+
+df <- data.frame(Modell, Accuracy)
+```
+
+
+```{r}
+df$Modell <- as.character(df$Modell)
+str(df)
+```
+
+
+```{r}
+library(ggplot2)
+```
+
+```{r}
+ggplot(df, aes(x=Modell, y=Accuracy)) +
+  #geom_line() +
+  geom_point(size = 3, color = "#0099f9") +
+  geom_text(aes(label = Accuracy, vjust=1.5)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 1.0)) +
+  scale_x_discrete(limits = c("Neuronales Netz", "Gradient Boosing", "Log. Regression")) +
+  theme_bw()
+```
+
